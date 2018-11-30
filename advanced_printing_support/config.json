@@ -1,1 +1,4 @@
-{"cardsPerRow": 3}
+{
+  "card_width": "2.5cm",
+  "flexbox_shrink": 0
+}

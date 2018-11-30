@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
+# Advanced Printing Support
+# Copyright: wizzwizz4
+# License: GNU AGPL, version 3 or later; http://www.gnu.org/copyleft/agpl.html
+#
+# Using code from Simple Printing Support
 # Copyright: Damien Elmes <anki@ichi2.net>
 # License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 #
 # Exports the cards in the current deck to a HTML file, so they can be
-# printed. Card styling is not included. Cards are printed in sort field
+# printed. Card styling is not yet included. Cards are printed in sort field
 # order.
 
 import re
@@ -34,35 +39,36 @@ def onPrint():
         s = re.sub("\[\[type:[^]]+\]\]", "", s)
         return s
     buf = open(path, "w", encoding="utf8")
-    buf.write("<html><head>" +
-              '<meta charset="utf-8">'
-              + mw.baseHTML() + "</head><body>")
+    buf.write("<html><head>"
+              '<meta charset="utf-8">')
+    buf.write(mw.baseHTML())
     buf.write("""<style>
-img { max-width: 100%; }
-tr { page-break-inside:avoid; page-break-after:auto }
-td { page-break-after:auto; }
-td { border: 1px solid #ccc; padding: 1em; }
-</style><table cellspacing=10 width=100%>""")
-    first = True
-
+img {
+  max-width: 100%;
+}
+body {
+  display: flex;
+  flex-flow: row wrap;
+}
+body > div {
+  page-break-after: auto;
+  border: 1px solid #ccc;
+  padding: 1em;
+  flex-grow: 1;
+  flex-basis: """ + str(config["card_width"]) + """;
+  flex-shrink: """ + str(config["flexbox_shrink"]) + """;
+}
+</style></head><body>""")
     mw.progress.start(immediate=True)
     for j, cid in enumerate(ids):
-        if j % config['cardsPerRow'] == 0:
-            if not first:
-                buf.write("</tr>")
-            else:
-                first = False
-            buf.write("<tr>")
         c = mw.col.getCard(cid)
         qatxt = c._getQA(True, False)['a']
         qatxt = mungeQA(mw.col, qatxt)
-        cont = u'<td width="{1}%"><center>{0}</center></td>'.format(
-            esc(qatxt), 100/config['cardsPerRow'])
+        cont = u'<div>{}</div>'.format(esc(qatxt))
         buf.write(cont)
         if j % 50 == 0:
             mw.progress.update("Cards exported: %d" % (j+1))
-    buf.write("</tr>")
-    buf.write("</table></body></html>")
+    buf.write("</body></html>")
     mw.progress.finish()
     buf.close()
     openLink(QUrl.fromLocalFile(path))
