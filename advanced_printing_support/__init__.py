@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Advanced Printing Support
 # Copyright: wizzwizz4
-# License: GNU AGPL, version 3 or later; http://www.gnu.org/copyleft/agpl.html
+# License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl.html
 #
 # Using code from Simple Printing Support
 # Copyright: Damien Elmes <anki@ichi2.net>
@@ -58,13 +58,28 @@ body > div {
   flex-basis: """ + str(config["card_width"]) + """;
   flex-shrink: """ + str(config["flexbox_shrink"]) + """;
 }
-</style></head><body>""")
+</style>
+<script>
+(f=>document.querySelectorAll("body > div").forEach(
+    e=>e.addEventListener("load", f)
+))(function(e){
+    var card = this.querySelector("div");
+    var css = this.querySelector("style");
+    this.removeChild(card);
+    this.removeChild(css);
+
+    var shadow = this.attachShadow({mode: 'open'});
+    shadow.appendChild(card);
+    shadow.appendChild(css);
+});
+</script></head><body>""")
     mw.progress.start(immediate=True)
     for j, cid in enumerate(ids):
         c = mw.col.getCard(cid)
+        css = c.css()
         qatxt = c._getQA(True, False)['a']
         qatxt = mungeQA(mw.col, qatxt)
-        cont = u'<div>{}</div>'.format(esc(qatxt))
+        cont = u'<div><div>{}</div>{}</div>'.format(esc(qatxt), css)
         buf.write(cont)
         if j % 50 == 0:
             mw.progress.update("Cards exported: %d" % (j+1))
