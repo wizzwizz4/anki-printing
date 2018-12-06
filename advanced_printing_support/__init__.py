@@ -58,38 +58,36 @@ body > div {
   flex-basis: """ + str(config["card_width"]) + """;
   flex-shrink: """ + str(config["flexbox_shrink"]) + """;
 }
-</style>
-<script>
-(f=>document.querySelectorAll("body > div").forEach(
-    e=>e.addEventListener("load", f)
-))(function(e){
-    var card = this.querySelector("div");
-    var css = this.querySelector("style");
-    this.removeChild(card);
-    this.removeChild(css);
-
-    var shadow = this.attachShadow({mode: 'open'});
-    shadow.appendChild(card);
-    shadow.appendChild(css);
-});
-</script></head><body>""")
+</style></head><body>""")
     mw.progress.start(immediate=True)
     for j, cid in enumerate(ids):
         c = mw.col.getCard(cid)
         css = c.css()
         qatxt = c._getQA(True, False)['a']
         qatxt = mungeQA(mw.col, qatxt)
-        cont = u'<div><div>{}</div>{}</div>'.format(esc(qatxt), css)
+        cont = u'<div><div class="card">{}</div>{}</div>'.format(esc(qatxt),
+                                                                 css)
         buf.write(cont)
         if j % 50 == 0:
             mw.progress.update("Cards exported: %d" % (j+1))
-    buf.write("</body></html>")
+    buf.write("""<script>
+document.querySelectorAll("body > div").forEach(function(e) {
+    var card = e.querySelector("div");
+    var css = e.querySelector("style");
+    e.removeChild(card);
+    e.removeChild(css);
+
+    var shadow = e.attachShadow({mode: 'open'});
+    shadow.appendChild(card);
+    shadow.appendChild(css);
+});
+</script></body></html>""")
     mw.progress.finish()
     buf.close()
     openLink(QUrl.fromLocalFile(path))
 
 q = QAction(mw)
 q.setText("Print")
-q.setShortcut(QKeySequence("Ctrl+Alt+P"))
+#q.setShortcut(QKeySequence("Ctrl+Alt+P"))
 mw.form.menuTools.addAction(q)
 q.triggered.connect(onPrint)
